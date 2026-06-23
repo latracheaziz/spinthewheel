@@ -126,12 +126,15 @@
 }
 
 .wheel-center-inner {
-  font-weight: 800;
-  font-size: 0.95rem;
-  color: #1a1a2e;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wheel-center-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
 }
 
 /* Leds lumineuses décoratives sur le contour */

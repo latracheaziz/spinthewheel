@@ -233,7 +233,7 @@ export default function Wheel({ rewards, isSpinning, onSpinFinished, winningInde
         {/* Centre de la roue (moyeu fixe / décoratif) */}
         <div className="wheel-center">
           <div className="wheel-center-inner">
-            Spin!
+            <img src="/logo.png" alt="Logo" className="wheel-center-logo" />
           </div>
         </div>
       </div>
