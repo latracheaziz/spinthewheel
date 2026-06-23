@@ -1,0 +1,12 @@
+{
+  "name": "spin-the-wheel-root",
+  "version": "1.0.0",
+  "description": "Root package for Spin The Wheel e-commerce game Vercel deployment",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemailer": "^9.0.1",
+    "sqlite3": "^5.1.7"
+  }
+}

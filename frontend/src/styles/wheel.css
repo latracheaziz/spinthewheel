@@ -1,0 +1,161 @@
+/* Container de la roue */
+.wheel-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* La roue elle-même */
+.wheel-outer {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  padding: 12px;
+  background: radial-gradient(circle, #251b4f 0%, #0e0a22 100%);
+  box-shadow: 
+    0 0 0 4px rgba(255, 255, 255, 0.05),
+    0 0 20px rgba(139, 92, 246, 0.3),
+    0 15px 35px rgba(0, 0, 0, 0.6),
+    inset 0 0 30px rgba(0, 0, 0, 0.8);
+  border: 4px solid var(--accent-purple);
+  transition: box-shadow 0.5s ease;
+}
+
+.wheel-outer.spinning {
+  box-shadow: 
+    0 0 0 4px rgba(255, 255, 255, 0.08),
+    0 0 40px var(--accent-purple-glow),
+    0 0 80px rgba(217, 70, 239, 0.2),
+    0 15px 35px rgba(0, 0, 0, 0.8);
+}
+
+.wheel-svg-wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+}
+
+.wheel-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: rotate(0deg);
+  /* transition dynamique affectée en JS */
+}
+
+/* Les textes des parts */
+.wheel-segment-text {
+  font-size: 12.5px;
+  font-weight: 800;
+  fill: #ffffff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+  pointer-events: none;
+}
+
+/* Le pointeur/marqueur de gain (flèche) */
+.wheel-pointer {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 36px;
+  height: 44px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.wheel-pointer-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Le centre de la roue (moyeu) */
+.wheel-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #dedede 60%, var(--accent-gold) 100%);
+  border: 4px solid #1a1a2e;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.6),
+    0 0 0 6px rgba(139, 92, 246, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.wheel-center::before {
+  content: '';
+  position: absolute;
+  width: 110%;
+  height: 110%;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  animation: rotateDashed 20s linear infinite;
+}
+
+@keyframes rotateDashed {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.wheel-center:hover {
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(245, 158, 11, 0.5),
+    0 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+.wheel-center-inner {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #1a1a2e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Leds lumineuses décoratives sur le contour */
+.wheel-led {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 6px #ffffff;
+  z-index: 3;
+  transform-origin: center;
+}
+
+/* Animation flash des LEDs */
+@keyframes ledFlash {
+  0%, 100% { opacity: 0.4; filter: brightness(0.8); }
+  50% { opacity: 1; filter: brightness(1.5) drop-shadow(0 0 5px #fff); background-color: var(--accent-gold); }
+}
+
+.wheel-led:nth-child(odd) {
+  animation: ledFlash 1s ease-in-out infinite;
+}
+
+.wheel-led:nth-child(even) {
+  animation: ledFlash 1s ease-in-out infinite 0.5s;
+}
