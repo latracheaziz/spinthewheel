@@ -73,9 +73,44 @@ async function sendVerificationEmail(target, code) {
         return { success: true, method: 'resend', id: resJson.id };
       } else {
         console.error(`[EmailService] Échec Resend :`, resJson);
+        // Si l'erreur est liée à la restriction Resend (envoi uniquement à soi-même)
+        if (resJson.message && resJson.message.includes('only send testing emails') && target !== 'azizlatrache5@gmail.com') {
+          console.log(`[EmailService] Redirection du code de vérification vers azizlatrache5@gmail.com en raison des restrictions Resend...`);
+          const fallbackSubject = `[TEST CODE] Code pour ${target} - Griffin Store 🔐`;
+          const fallbackHtml = `
+            <div style="background-color: #ffeebc; border: 1px solid #e5c158; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #856404; font-family: Arial, sans-serif;">
+              <strong>Mode Test :</strong> Cet email de vérification a été redirigé vers l'adresse de l'administrateur car Resend est en mode gratuit/limité et ne peut pas envoyer d'e-mails à des tiers sans domaine vérifié.
+            </div>
+            ${htmlBody}
+          `;
+          const fallbackResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: process.env.RESEND_FROM || 'onboarding@resend.dev',
+              to: 'azizlatrache5@gmail.com',
+              subject: fallbackSubject,
+              text: `[TEST CODE REDIRIGÉ] Destinataire cible: ${target}. Code: ${code}. ${plainText}`,
+              html: fallbackHtml
+            })
+          });
+          const fallbackJson = await fallbackResponse.json();
+          if (fallbackResponse.ok) {
+            console.log(`[EmailService] Code redirigé avec succès via Resend à azizlatrache5@gmail.com ! ID: ${fallbackJson.id}`);
+            return { success: true, method: 'resend_fallback', id: fallbackJson.id };
+          } else {
+            console.error(`[EmailService] Échec de la redirection Resend :`, fallbackJson);
+          }
+        }
       }
     } catch (resendError) {
       console.error(`[EmailService] Erreur lors de l'envoi Resend :`, resendError.message);
+      if (resendError.cause) {
+        console.error(`[EmailService] Cause de l'erreur Resend :`, resendError.cause);
+      }
     }
   }
 
@@ -238,6 +273,9 @@ async function sendAdminNotificationEmail(playerEmail, rewardName, couponCode) {
       }
     } catch (resendError) {
       console.error(`[EmailService] Erreur lors de l'envoi Resend notification :`, resendError.message);
+      if (resendError.cause) {
+        console.error(`[EmailService] Cause de l'erreur Resend notification :`, resendError.cause);
+      }
     }
   }
 

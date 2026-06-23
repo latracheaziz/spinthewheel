@@ -98,7 +98,7 @@ export default function App() {
     if (isSpinning) return;
     
     const trimmedInput = email.trim();
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedInput);
+    const isEmail = /^[a-zA-Z0-9]+[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmedInput);
 
     if (!isEmail) {
       setErrorMsg('Veuillez saisir une adresse email valide (ex: exemple@email.com).');
