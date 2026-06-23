@@ -194,27 +194,33 @@ export default function App() {
                      rewardWon.name.toLowerCase().includes('perdu') ||
                      rewardWon.name.toLowerCase().includes('prochaine') ||
                      rewardWon.name.toLowerCase().includes('essaie');
-    if (!isLosing) {
-      // Effet confetti premium
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-      // Deuxième explosion décalée pour plus de volume
+    if (isLosing) {
+      setSuccessMsg("Oups ! Essaie encore, relance en cours...");
       setTimeout(() => {
-        confetti({
-          particleCount: 100,
-          spread: 100,
-          origin: { x: 0.3, y: 0.5 }
-        });
-        confetti({
-          particleCount: 100,
-          spread: 100,
-          origin: { x: 0.7, y: 0.5 }
-        });
-      }, 300);
+        triggerSpin(email);
+      }, 1500);
+      return;
     }
+
+    // Effet confetti premium
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 }
+    });
+    // Deuxième explosion décalée pour plus de volume
+    setTimeout(() => {
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { x: 0.3, y: 0.5 }
+      });
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { x: 0.7, y: 0.5 }
+      });
+    }, 300);
 
     // Ouvrir la popup du résultat
     setIsModalOpen(true);

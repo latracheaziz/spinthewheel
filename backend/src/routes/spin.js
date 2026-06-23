@@ -181,27 +181,29 @@ router.post('/', async (req, res) => {
     const couponCode = generateCoupon(chosenReward.name);
 
     // 5. Sauvegarder dans la table users_spins
-    // En cas de bypass, on ajoute un suffixe timestamp pour éviter l'erreur UNIQUE de SQLite
-    const dbIdentifier = isBypass ? `${standardizedIdentifier}#${Date.now()}` : standardizedIdentifier;
+    const isEssaie = chosenReward.name.toLowerCase().includes('essaie');
     
-    await dbQuery.run(
-      'INSERT INTO users_spins (user_identifier, reward, coupon_code) VALUES (?, ?, ?)',
-      [dbIdentifier, chosenReward.name, couponCode]
-    );
+    if (!isEssaie) {
+      // En cas de bypass, on ajoute un suffixe timestamp pour éviter l'erreur UNIQUE de SQLite
+      const dbIdentifier = isBypass ? `${standardizedIdentifier}#${Date.now()}` : standardizedIdentifier;
+      
+      await dbQuery.run(
+        'INSERT INTO users_spins (user_identifier, reward, coupon_code) VALUES (?, ?, ?)',
+        [dbIdentifier, chosenReward.name, couponCode]
+      );
 
-    // Si IP disponible, non locale et pas en mode bypass, on bloque l'IP
-    if (!isBypass && ip && ip !== '127.0.0.1' && ip !== '::1') {
-      try {
-        await dbQuery.run(
-          'INSERT INTO users_spins (user_identifier, reward, coupon_code) VALUES (?, ?, ?)',
-          [ip, chosenReward.name, couponCode]
-        );
-      } catch (err) {
-        console.warn('IP déjà enregistrée pour double-spin ou erreur:', err.message);
+      // Si IP disponible, non locale et pas en mode bypass, on bloque l'IP
+      if (!isBypass && ip && ip !== '127.0.0.1' && ip !== '::1') {
+        try {
+          await dbQuery.run(
+            'INSERT INTO users_spins (user_identifier, reward, coupon_code) VALUES (?, ?, ?)',
+            [ip, chosenReward.name, couponCode]
+          );
+        } catch (err) {
+          console.warn('IP déjà enregistrée pour double-spin ou erreur:', err.message);
+        }
       }
     }
-
-
 
     // 6. Renvoyer le résultat
     res.json({
@@ -214,9 +216,11 @@ router.post('/', async (req, res) => {
     });
 
     // 7. Envoyer la notification admin par e-mail de façon asynchrone (sans bloquer la roue)
-    sendAdminNotificationEmail(standardizedIdentifier, chosenReward.name, couponCode).catch(err => {
-      console.error('[Admin Notification] Impossible d\'envoyer le mail de notification :', err.message);
-    });
+    if (!isEssaie) {
+      sendAdminNotificationEmail(standardizedIdentifier, chosenReward.name, couponCode).catch(err => {
+        console.error('[Admin Notification] Impossible d\'envoyer le mail de notification :', err.message);
+      });
+    }
 
   } catch (error) {
     console.error('Erreur lors du spin:', error);
