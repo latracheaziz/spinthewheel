@@ -1,0 +1,22 @@
+# Dependency directories
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Databases & local logs
+backend/data/database.sqlite
+backend/data/sent_emails.log
+
+# Build outputs
+dist/
+frontend/dist/
+
+# Vercel configuration
+.vercel
