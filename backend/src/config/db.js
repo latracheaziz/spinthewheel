@@ -1,4 +1,3 @@
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
@@ -9,50 +8,252 @@ if (!isVercel && !fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Erreur de connexion à SQLite:', err.message);
-  } else {
-    console.log('Connecté à la base de données SQLite.');
-  }
-});
+let sqlite3;
+let useSQLite = true;
 
-// Promisification des méthodes de sqlite3
-const dbQuery = {
-  run(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      db.run(sql, params, function (err) {
-        if (err) reject(err);
-        else resolve({ lastID: this.lastID, changes: this.changes });
+try {
+  sqlite3 = require('sqlite3').verbose();
+} catch (err) {
+  console.warn('[DB] Failed to load sqlite3 native package. Falling back to pure JS JSON database:', err.message);
+  useSQLite = false;
+}
+
+let db = null;
+let dbQuery = null;
+
+if (useSQLite) {
+  const dbPath = path.join(dataDir, 'database.sqlite');
+  db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('Erreur de connexion à SQLite:', err.message);
+    } else {
+      console.log('Connecté à la base de données SQLite.');
+    }
+  });
+
+  // Promisification des méthodes de sqlite3
+  dbQuery = {
+    run(sql, params = []) {
+      return new Promise((resolve, reject) => {
+        db.run(sql, params, function (err) {
+          if (err) reject(err);
+          else resolve({ lastID: this.lastID, changes: this.changes });
+        });
       });
-    });
-  },
-  get(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      db.get(sql, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
+    },
+    get(sql, params = []) {
+      return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
       });
-    });
-  },
-  all(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+    },
+    all(sql, params = []) {
+      return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
       });
-    });
-  },
-  exec(sql) {
-    return new Promise((resolve, reject) => {
-      db.exec(sql, (err) => {
-        if (err) reject(err);
-        else resolve();
+    },
+    exec(sql) {
+      return new Promise((resolve, reject) => {
+        db.exec(sql, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
       });
-    });
+    }
+  };
+} else {
+  // Pure JavaScript JSON database fallback
+  const jsonPath = path.join(dataDir, 'database.json');
+  
+  class JsonDatabase {
+    constructor(filePath) {
+      this.filePath = filePath;
+      this.data = {
+        rewards: [],
+        users_spins: [],
+        email_verifications: []
+      };
+      this.load();
+    }
+
+    load() {
+      try {
+        if (fs.existsSync(this.filePath)) {
+          const fileContent = fs.readFileSync(this.filePath, 'utf8');
+          this.data = JSON.parse(fileContent);
+        } else {
+          this.save();
+        }
+      } catch (err) {
+        console.error('[JsonDatabase] Error loading file, resetting:', err.message);
+        this.save();
+      }
+    }
+
+    save() {
+      try {
+        const dir = path.dirname(this.filePath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(this.filePath, JSON.stringify(this.data, null, 2), 'utf8');
+      } catch (err) {
+        console.error('[JsonDatabase] Error saving file:', err.message);
+      }
+    }
+
+    query(sql, params = [], singleRow = false) {
+      const sqlClean = sql.trim().replace(/\s+/g, ' ');
+      const sqlLower = sqlClean.toLowerCase();
+
+      // SELECT * FROM rewards
+      if (sqlLower.startsWith('select * from rewards')) {
+        let list = [...this.data.rewards];
+        if (sqlLower.includes('active = 1')) {
+          list = list.filter(r => r.active === 1 && (r.stock > 0 || r.stock === -1));
+        }
+        return singleRow ? list[0] || null : list;
+      }
+
+      // SELECT COUNT(*) FROM rewards
+      if (sqlLower.startsWith('select count(*)')) {
+        return { count: this.data.rewards.length };
+      }
+
+      // SELECT from email_verifications
+      if (sqlLower.startsWith('select verified_at from email_verifications') || sqlLower.startsWith('select * from email_verifications')) {
+        const email = params[0];
+        const record = this.data.email_verifications.find(v => v.email === email);
+        if (record) {
+          if (sqlLower.includes('-7 days')) {
+            if (!record.verified_at) return null;
+            const verifiedTime = new Date(record.verified_at).getTime();
+            const limitTime = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            if (verifiedTime < limitTime) return null;
+          }
+          return record;
+        }
+        return null;
+      }
+
+      // SELECT from users_spins
+      if (sqlLower.startsWith('select id from users_spins') || sqlLower.startsWith('select * from users_spins')) {
+        if (sqlLower.includes('user_identifier = ?')) {
+          const user = params[0];
+          const record = this.data.users_spins.find(s => s.user_identifier === user);
+          return record || null;
+        }
+        let list = this.data.users_spins
+          .filter(s => s.user_identifier && s.user_identifier.includes('@'))
+          .map(s => ({ id: s.id, email: s.user_identifier, reward: s.reward, coupon_code: s.coupon_code, created_at: s.created_at }))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return list;
+      }
+
+      // UPDATE rewards
+      if (sqlLower.startsWith('update rewards')) {
+        if (sqlLower.includes('stock = stock - 1')) {
+          const id = params[0];
+          const reward = this.data.rewards.find(r => r.id === id);
+          if (reward && reward.stock > 0) {
+            reward.stock -= 1;
+            this.save();
+          }
+          return { changes: 1 };
+        }
+        const id = params[4];
+        const reward = this.data.rewards.find(r => r.id === id);
+        if (reward) {
+          reward.name = params[0];
+          reward.probability = params[1];
+          reward.active = params[2];
+          reward.stock = params[3];
+          this.save();
+        }
+        return { changes: 1 };
+      }
+
+      // INSERT INTO rewards
+      if (sqlLower.startsWith('insert into rewards')) {
+        const id = this.data.rewards.length > 0 ? Math.max(...this.data.rewards.map(r => r.id)) + 1 : 1;
+        this.data.rewards.push({
+          id,
+          name: params[0],
+          probability: parseFloat(params[1]),
+          active: parseInt(params[2], 10),
+          stock: parseInt(params[3], 10)
+        });
+        this.save();
+        return { lastID: id, changes: 1 };
+      }
+
+      // INSERT INTO users_spins
+      if (sqlLower.startsWith('insert into users_spins')) {
+        const id = this.data.users_spins.length > 0 ? Math.max(...this.data.users_spins.map(s => s.id)) + 1 : 1;
+        this.data.users_spins.push({
+          id,
+          user_identifier: params[0],
+          reward: params[1],
+          coupon_code: params[2],
+          created_at: new Date().toISOString()
+        });
+        this.save();
+        return { lastID: id, changes: 1 };
+      }
+
+      // INSERT/UPSERT INTO email_verifications
+      if (sqlLower.startsWith('insert into email_verifications')) {
+        const email = params[0];
+        const code = params[1];
+        
+        let record = this.data.email_verifications.find(v => v.email === email);
+        if (!record) {
+          record = { email, code, verified_at: null, created_at: new Date().toISOString() };
+          this.data.email_verifications.push(record);
+        }
+        record.code = code;
+        
+        if (sqlClean.includes('datetime(') || sqlClean.includes("code, verified_at") || sqlClean.includes("'BYPASS'")) {
+          record.verified_at = new Date().toISOString();
+        } else {
+          record.verified_at = null;
+        }
+        record.created_at = new Date().toISOString();
+        this.save();
+        return { lastID: email, changes: 1 };
+      }
+
+      // CREATE TABLE
+      if (sqlLower.startsWith('create table')) {
+        return { changes: 0 };
+      }
+
+      console.warn('[JsonDatabase] Unhandled query:', sql);
+      return null;
+    }
   }
-};
+
+  const jsonDb = new JsonDatabase(jsonPath);
+  dbQuery = {
+    run(sql, params = []) {
+      return Promise.resolve(jsonDb.query(sql, params));
+    },
+    get(sql, params = []) {
+      return Promise.resolve(jsonDb.query(sql, params, true));
+    },
+    all(sql, params = []) {
+      return Promise.resolve(jsonDb.query(sql, params, false));
+    },
+    exec(sql) {
+      return Promise.resolve(jsonDb.query(sql, [], false));
+    }
+  };
+}
 
 // Initialisation des tables
 async function initDatabase() {
