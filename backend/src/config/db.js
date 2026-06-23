@@ -14,7 +14,8 @@ let useSQLite = false;
 // Never use sqlite3 on Vercel (native binary not compatible with serverless Lambda)
 if (!isVercel) {
   try {
-    sqlite3 = require('sqlite3').verbose();
+    const sqliteModuleName = 'sqlite3';
+    sqlite3 = require(sqliteModuleName).verbose();
     useSQLite = true;
   } catch (err) {
     console.warn('[DB] Failed to load sqlite3 native package. Falling back to pure JS JSON database:', err.message);
