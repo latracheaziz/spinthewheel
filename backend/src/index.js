@@ -80,7 +80,12 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date(),
+    env_vercel: process.env.VERCEL || 'not_set',
+    useSQLite: require('./config/db').db !== null
+  });
 });
 
 // Initialisation de la base de données et lancement du serveur (local only)
