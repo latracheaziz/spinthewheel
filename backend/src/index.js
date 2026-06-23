@@ -52,7 +52,7 @@ app.use('/admin', adminRouter);
 app.get('/spins', async (req, res) => {
   try {
     const spins = await dbQuery.all(
-      "SELECT id, user_identifier as email, reward, coupon_code, created_at FROM users_spins WHERE user_identifier LIKE '%@%' ORDER BY created_at DESC"
+      "SELECT id, user_identifier as email, reward, coupon_code, created_at FROM users_spins WHERE (user_identifier LIKE '+%' OR user_identifier LIKE '%@%') ORDER BY created_at DESC"
     );
     res.json({ success: true, data: spins });
   } catch (error) {
@@ -64,7 +64,7 @@ app.get('/spins', async (req, res) => {
 app.get('/api/spins', async (req, res) => {
   try {
     const spins = await dbQuery.all(
-      "SELECT id, user_identifier as email, reward, coupon_code, created_at FROM users_spins WHERE user_identifier LIKE '%@%' ORDER BY created_at DESC"
+      "SELECT id, user_identifier as email, reward, coupon_code, created_at FROM users_spins WHERE (user_identifier LIKE '+%' OR user_identifier LIKE '%@%') ORDER BY created_at DESC"
     );
     res.json({ success: true, data: spins });
   } catch (error) {

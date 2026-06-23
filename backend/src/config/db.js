@@ -152,7 +152,7 @@ if (useSQLite) {
           return record || null;
         }
         let list = this.data.users_spins
-          .filter(s => s.user_identifier && s.user_identifier.includes('@'))
+          .filter(s => s.user_identifier && (s.user_identifier.includes('@') || s.user_identifier.startsWith('+')))
           .map(s => ({ id: s.id, email: s.user_identifier, reward: s.reward, coupon_code: s.coupon_code, created_at: s.created_at }))
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         return list;
