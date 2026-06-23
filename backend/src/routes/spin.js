@@ -3,13 +3,25 @@ const router = express.Router();
 const { dbQuery } = require('../config/db');
 const { sendAdminNotificationEmail } = require('../services/emailService');
 
-// Validation simple d'email
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(String(email).toLowerCase());
+// Validation simple de téléphone (Tunisie)
+function validatePhone(phone) {
+  const cleaned = String(phone).replace(/\s+/g, '');
+  const re = /^(?:\+216|00216)?[0-9]{8}$/;
+  return re.test(cleaned);
+}
+
+function standardizePhone(phone) {
+  let cleaned = String(phone).replace(/\s+/g, '');
+  if (cleaned.startsWith('00216')) {
+    cleaned = '+' + cleaned.substring(2);
+  } else if (!cleaned.startsWith('+216')) {
+    cleaned = '+216' + cleaned;
+  }
+  return cleaned;
 }
 
 // Les numéros de téléphone ne sont plus acceptés, seuls les e-mails sont admis.
+// UPDATE: Now we accept phone numbers.
 
 // Générateur de code coupon unique et lisible
 function generateCoupon(rewardName) {
@@ -69,25 +81,26 @@ router.post('/', async (req, res) => {
     ip = ip.substring(7);
   }
 
-  // 1. Validation de l'email
-  if (!email) {
-    return res.status(400).json({ success: false, error: 'Veuillez saisir une adresse email.' });
+  // 1. Validation du téléphone
+  const phoneInput = email || req.body.phone;
+  if (!phoneInput) {
+    return res.status(400).json({ success: false, error: 'Veuillez saisir un numéro de téléphone.' });
   }
 
-  const trimmedInput = email.trim();
+  const trimmedInput = phoneInput.trim();
 
-  if (!validateEmail(trimmedInput)) {
+  if (!validatePhone(trimmedInput)) {
     return res.status(400).json({ 
       success: false, 
-      error: 'Adresse email invalide. Veuillez saisir une adresse email correcte.' 
+      error: 'Numéro de téléphone invalide. Veuillez saisir un numéro de téléphone tunisien correct.' 
     });
   }
 
-  const standardizedIdentifier = trimmedInput.toLowerCase();
+  const standardizedIdentifier = standardizePhone(trimmedInput);
 
   try {
-    // Vérifier si l'identifiant doit outrepasser la limite de double-spin (azizlatrache5@gmail.com)
-    const isBypass = standardizedIdentifier === 'azizlatrache5@gmail.com';
+    // Vérifier si l'identifiant doit outrepasser la limite de double-spin (azizlatrache5@gmail.com ou +21699999999)
+    const isBypass = standardizedIdentifier === 'azizlatrache5@gmail.com' || standardizedIdentifier === '+21699999999';
 
     // 1b. Vérifier que l'identifiant est bien vérifié depuis moins de 7 jours (sauf bypass)
     if (!isBypass) {
@@ -112,7 +125,7 @@ router.post('/', async (req, res) => {
       if (identifierExists) {
         return res.status(400).json({ 
           success: false, 
-          error: 'Cette adresse email a déjà été utilisée pour lancer la roue.' 
+          error: 'Ce numéro de téléphone a déjà été utilisé pour lancer la roue.' 
         });
       }
 

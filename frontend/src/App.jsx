@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Wheel from './components/Wheel';
 import Modal from './components/Modal';
-import { Mail, Play, ShieldAlert, Award } from 'lucide-react';
+import { Phone, Play, ShieldAlert, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import './styles/main.css';
 
@@ -99,10 +99,11 @@ export default function App() {
     if (isSpinning) return;
     
     const trimmedInput = email.trim();
-    const isEmail = /^[a-zA-Z0-9]+[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmedInput);
+    const cleaned = trimmedInput.replace(/\s+/g, '');
+    const isPhone = /^(?:\+216|00216)?[0-9]{8}$/.test(cleaned);
 
-    if (!isEmail) {
-      setErrorMsg('Veuillez saisir une adresse email valide (ex: exemple@email.com).');
+    if (!isPhone) {
+      setErrorMsg('Veuillez saisir un numéro de téléphone tunisien correct (+216 XX XXX XXX ou 8 chiffres).');
       return;
     }
 
@@ -250,7 +251,7 @@ export default function App() {
               <span>& Gagnez un cadeau !</span>
             </h1>
             <p className="intro-desc">
-              Entrez votre adresse email ci-dessous pour faire tourner la roue.
+              Entrez votre numéro de téléphone ci-dessous pour faire tourner la roue.
               Vous pouvez remporter des codes de réduction, la livraison gratuite, des porte-clés et même des t-shirts gratuits !
             </p>
 
@@ -259,10 +260,10 @@ export default function App() {
                 <form onSubmit={handleSpinRequest}>
                   <div className="form-group">
                     <label htmlFor="user-email" className="form-label">
-                      Adresse e-mail
+                      Numéro de téléphone
                     </label>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <Mail 
+                      <Phone 
                         size={18} 
                         style={{ 
                           position: 'absolute', 
@@ -272,8 +273,8 @@ export default function App() {
                       />
                       <input
                         id="user-email"
-                        type="email"
-                        placeholder="exemple@email.com"
+                        type="tel"
+                        placeholder="+216 XX XXX XXX"
                         className="input-field"
                         style={{ paddingLeft: '40px', width: '100%' }}
                         value={email}

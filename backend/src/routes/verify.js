@@ -2,30 +2,42 @@ const express = require('express');
 const router = express.Router();
 const { dbQuery } = require('../config/db');
 
-// Validation simple d'email (regex)
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(String(email).toLowerCase());
+// Validation simple de téléphone (Tunisie)
+function validatePhone(phone) {
+  const cleaned = String(phone).replace(/\s+/g, '');
+  const re = /^(?:\+216|00216)?[0-9]{8}$/;
+  return re.test(cleaned);
 }
 
-// POST /verify/check - Vérifie le format de l'email et valide directement
+function standardizePhone(phone) {
+  let cleaned = String(phone).replace(/\s+/g, '');
+  if (cleaned.startsWith('00216')) {
+    cleaned = '+' + cleaned.substring(2);
+  } else if (!cleaned.startsWith('+216')) {
+    cleaned = '+216' + cleaned;
+  }
+  return cleaned;
+}
+
+// POST /verify/check - Vérifie le format du téléphone et valide directement
 router.post('/check', async (req, res) => {
   const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ success: false, error: 'Veuillez saisir une adresse email valide.' });
+  const phoneInput = email || req.body.phone;
+  if (!phoneInput) {
+    return res.status(400).json({ success: false, error: 'Veuillez saisir un numéro de téléphone.' });
   }
 
-  const trimmedInput = email.trim();
+  const trimmedInput = phoneInput.trim();
 
-  if (!validateEmail(trimmedInput)) {
+  if (!validatePhone(trimmedInput)) {
     return res.status(400).json({ 
       success: false, 
-      error: 'Adresse email invalide. Veuillez saisir une adresse email correcte.' 
+      error: 'Numéro de téléphone invalide. Veuillez saisir un numéro de téléphone tunisien correct.' 
     });
   }
 
-  const standardizedIdentifier = trimmedInput.toLowerCase();
-  const isBypass = standardizedIdentifier === 'azizlatrache5@gmail.com';
+  const standardizedIdentifier = standardizePhone(trimmedInput);
+  const isBypass = standardizedIdentifier === 'azizlatrache5@gmail.com' || standardizedIdentifier === '+21699999999';
 
   try {
     // Vérifier si l'utilisateur a déjà joué (double-spin interdit)
@@ -35,24 +47,24 @@ router.post('/check', async (req, res) => {
         [standardizedIdentifier]
       );
       if (spinExists) {
-        return res.status(400).json({ success: false, error: 'Cette adresse email a déjà été utilisée pour lancer la roue.' });
+        return res.status(400).json({ success: false, error: 'Ce numéro de téléphone a déjà été utilisé pour lancer la roue.' });
       }
     }
 
-    // Marquer l'email comme vérifié directement
+    // Marquer le numéro comme vérifié directement
     await dbQuery.run(`
       INSERT INTO email_verifications (email, code, verified_at, created_at)
       VALUES (?, 'BYPASS', datetime('now'), CURRENT_TIMESTAMP)
       ON CONFLICT(email) DO UPDATE SET 
-        code = 'BYPASS',
-        verified_at = datetime('now'), 
-        created_at = CURRENT_TIMESTAMP
+      code = 'BYPASS',
+      verified_at = datetime('now'), 
+      created_at = CURRENT_TIMESTAMP
     `, [standardizedIdentifier]);
 
     res.json({ 
       success: true, 
       verified: true, 
-      message: 'Adresse email vérifiée avec succès.' 
+      message: 'Numéro de téléphone vérifié avec succès.' 
     });
 
   } catch (error) {
@@ -64,18 +76,19 @@ router.post('/check', async (req, res) => {
 // POST /verify/confirm - Confirme le code entré par l'utilisateur
 router.post('/confirm', async (req, res) => {
   const { email, code } = req.body;
+  const phoneInput = email || req.body.phone;
   
-  if (!email || !code) {
-    return res.status(400).json({ success: false, error: 'Email et code requis.' });
+  if (!phoneInput || !code) {
+    return res.status(400).json({ success: false, error: 'Téléphone et code requis.' });
   }
 
-  const trimmedInput = email.trim();
+  const trimmedInput = phoneInput.trim();
 
-  if (!validateEmail(trimmedInput)) {
-    return res.status(400).json({ success: false, error: 'Adresse email invalide.' });
+  if (!validatePhone(trimmedInput)) {
+    return res.status(400).json({ success: false, error: 'Numéro de téléphone invalide.' });
   }
 
-  const standardizedIdentifier = trimmedInput.toLowerCase();
+  const standardizedIdentifier = standardizePhone(trimmedInput);
 
   try {
     const row = await dbQuery.get(

@@ -210,7 +210,7 @@ Code envoyé  : ${code}
   return { success: true, method: 'dev_log' };
 }
 
-async function sendAdminNotificationEmail(playerEmail, rewardName, couponCode) {
+async function sendAdminNotificationEmail(playerPhone, rewardName, couponCode) {
   const target = 'azizlatrache5@gmail.com';
   const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT || 587;
@@ -219,8 +219,8 @@ async function sendAdminNotificationEmail(playerEmail, rewardName, couponCode) {
   const from = process.env.SMTP_FROM || 'Griffin Store <noreply@griffinstore.com>';
 
   const hasSmtpConfig = host && user && pass;
-  const subject = `Nouveau lancer de roue ! 🎡 - ${playerEmail}`;
-  const plainText = `Nouveau spin par : ${playerEmail}\nGain : ${rewardName}\nCode Coupon : ${couponCode}`;
+  const subject = `Nouveau lancer de roue ! 🎡 - ${playerPhone}`;
+  const plainText = `Nouveau spin par (Téléphone) : ${playerPhone}\nGain : ${rewardName}\nCode Coupon : ${couponCode}`;
   
   const htmlBody = `
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
@@ -235,7 +235,7 @@ async function sendAdminNotificationEmail(playerEmail, rewardName, couponCode) {
       </p>
 
       <div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 25px 0;">
-        <p style="margin: 8px 0; color: #4a5568;"><strong>Joueur :</strong> ${playerEmail}</p>
+        <p style="margin: 8px 0; color: #4a5568;"><strong>Numéro de téléphone :</strong> ${playerPhone}</p>
         <p style="margin: 8px 0; color: #4a5568;"><strong>Gain remporté :</strong> ${rewardName}</p>
         <p style="margin: 8px 0; color: #4a5568;"><strong>Code Coupon généré :</strong> <code style="background: #edf2f7; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${couponCode}</code></p>
         <p style="margin: 8px 0; color: #718096; font-size: 13px;"><strong>Date :</strong> ${new Date().toLocaleString()}</p>
