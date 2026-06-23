@@ -84,6 +84,7 @@ export default function App() {
       setRewardWon(data.reward);
       setCouponCode(data.couponCode);
       setIsSpinning(true);
+      setLoading(false);
 
     } catch (err) {
       console.error(err);
@@ -217,6 +218,11 @@ export default function App() {
     // Ouvrir la popup du résultat
     setIsModalOpen(true);
     setSuccessMsg(`Félicitations ! Vous avez gagné : ${rewardWon.name}`);
+
+    // Auto-refresh automatique après 8 secondes pour réinitialiser complètement le jeu
+    setTimeout(() => {
+      window.location.reload();
+    }, 8000);
   };
 
   const handleCloseModal = () => {
