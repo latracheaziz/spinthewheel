@@ -29,9 +29,6 @@ export default function Modal({ isOpen, onClose, reward, couponCode }) {
         {isLosing ? (
           // Contenu en cas de perte
           <div style={styles.body}>
-            <div style={{ ...styles.iconContainer, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-              <Info size={40} />
-            </div>
             <h2 style={styles.title}>Essaie à la prochaine ! 😊</h2>
             <p style={styles.desc}>
               Pas de chance cette fois-ci ! Garde le sourire, d'autres surprises t'attendent très bientôt.
