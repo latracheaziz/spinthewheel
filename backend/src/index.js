@@ -10,6 +10,24 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// IMPORTANT: On Vercel (serverless), initialize DB BEFORE routes so it's
+// ready when the first request arrives. This middleware MUST come first.
+if (process.env.VERCEL) {
+  let isDbInitialized = false;
+  app.use(async (req, res, next) => {
+    if (!isDbInitialized) {
+      try {
+        await initDatabase();
+        isDbInitialized = true;
+        console.log('[Vercel] DB initialized successfully on first request');
+      } catch (err) {
+        console.error('[Vercel] Lazy DB initialization failed:', err);
+      }
+    }
+    next();
+  });
+}
+
 // Routes
 const rewardsRouter = require('./routes/rewards');
 const spinRouter = require('./routes/spin');
@@ -60,7 +78,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
-// Initialisation de la base de données et lancement du serveur
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date() });
+});
+
+// Initialisation de la base de données et lancement du serveur (local only)
 async function startServer() {
   try {
     await initDatabase();
@@ -75,20 +97,6 @@ async function startServer() {
 
 if (!process.env.VERCEL) {
   startServer();
-} else {
-  // Sur Vercel (serverless), on initialise la base de données au premier appel de requête (lazy load)
-  let isDbInitialized = false;
-  app.use(async (req, res, next) => {
-    if (!isDbInitialized) {
-      try {
-        await initDatabase();
-        isDbInitialized = true;
-      } catch (err) {
-        console.error('Lazy DB initialization failed:', err);
-      }
-    }
-    next();
-  });
 }
 
 module.exports = app;

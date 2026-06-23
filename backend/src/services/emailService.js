@@ -3,7 +3,11 @@ const fs = require('fs');
 const path = require('path');
 
 // Logs locaux d'emails envoyés en mode dev
-const logFilePath = path.join(__dirname, '../../data/sent_emails.log');
+const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL;
+const logFilePath = isVercel
+  ? '/tmp/sent_emails.log'
+  : path.join(__dirname, '../../data/sent_emails.log');
+
 
 async function sendVerificationEmail(target, code) {
   // Configurer le transporteur SMTP à partir des variables d'environnement
