@@ -90,11 +90,11 @@ async function initDatabase() {
   if (count.count === 0) {
     const initialRewards = [
       { name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
-      { name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
+      { name: 'Livraison gratuite', probability: 0.08, active: 1, stock: -1 },
       { name: '5% de réduction', probability: 0.20, active: 1, stock: -1 },
       { name: '10% de réduction', probability: 0.10, active: 1, stock: -1 },
       { name: '15% de réduction', probability: 0.10, active: 1, stock: -1 },
-      { name: 'Livraison gratuite', probability: 0.08, active: 1, stock: -1 },
+      { name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
       { name: '50% de réduction sur 3ème achat', probability: 0.05, active: 1, stock: -1 },
       { name: 'Porte-clés gratuit', probability: 0.03, active: 1, stock: 10 },
       { name: 'T-shirt gratuit', probability: 0.02, active: 1, stock: 5 },
