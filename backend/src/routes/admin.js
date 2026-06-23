@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { dbQuery } = require('../config/db');
 
-// GET /api/admin/spins - Récupérer tous les lancers réels (par email)
+// GET /api/admin/spins - Récupérer tous les lancers réels (par email/téléphone)
 router.get('/spins', async (req, res) => {
   try {
     const spins = await dbQuery.all(
-      "SELECT id, user_identifier as email, reward, coupon_code, created_at FROM users_spins WHERE user_identifier LIKE '%@%' ORDER BY created_at DESC"
+      "SELECT id, user_identifier as email, reward, coupon_code, created_at FROM users_spins WHERE (user_identifier LIKE '+%' OR user_identifier LIKE '%@%') ORDER BY created_at DESC"
     );
     res.json({ success: true, data: spins });
   } catch (error) {
@@ -19,12 +19,12 @@ router.get('/spins', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const totalResult = await dbQuery.get(
-      "SELECT COUNT(*) as total FROM users_spins WHERE user_identifier LIKE '%@%'"
+      "SELECT COUNT(*) as total FROM users_spins WHERE (user_identifier LIKE '+%' OR user_identifier LIKE '%@%')"
     );
     const total = totalResult.total;
 
     const distribution = await dbQuery.all(
-      "SELECT reward, COUNT(*) as count FROM users_spins WHERE user_identifier LIKE '%@%' GROUP BY reward"
+      "SELECT reward, COUNT(*) as count FROM users_spins WHERE (user_identifier LIKE '+%' OR user_identifier LIKE '%@%') GROUP BY reward"
     );
 
     const stats = distribution.map(row => ({

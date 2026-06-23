@@ -12,7 +12,8 @@ app.use(express.json());
 
 // IMPORTANT: On Vercel (serverless), initialize DB BEFORE routes so it's
 // ready when the first request arrives. This middleware MUST come first.
-if (process.env.VERCEL) {
+const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME;
+if (isVercel) {
   let isDbInitialized = false;
   app.use(async (req, res, next) => {
     if (!isDbInitialized) {
