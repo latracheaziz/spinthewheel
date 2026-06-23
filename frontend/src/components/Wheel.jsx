@@ -77,7 +77,7 @@ export default function Wheel({ rewards, isSpinning, onSpinFinished, winningInde
     const nameLower = fullName.toLowerCase();
     if (nameLower.includes('pas de chance')) return 'Pas de chance';
     if (nameLower.includes('prochaine') || nameLower.includes('essaie')) return 'Essaie encore';
-    if (nameLower.includes('50%')) return '50% s/ 3e achat';
+    if (nameLower.includes('50%')) return '50% de Réduc.';
     if (nameLower.includes('15%')) return '15% de Réduc.';
     if (nameLower.includes('10%')) return '10% de Réduc.';
     if (nameLower.includes('5%')) return '5% de Réduc.';
