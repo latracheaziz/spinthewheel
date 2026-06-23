@@ -234,19 +234,10 @@ export default function App() {
   return (
     <>
       <header>
-        <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img 
-            src="/logo.png" 
-            alt="Griffin Logo" 
-            style={{ 
-              height: '35px', 
-              width: 'auto', 
-              filter: 'brightness(0) invert(1)',
-              opacity: '0.9'
-            }} 
-          />
+        <div className="logo">
           <span>SPIN</span> AND WIN
         </div>
+
       </header>
 
       <main className="app-container">
