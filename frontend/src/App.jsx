@@ -221,8 +221,8 @@ export default function App() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    // Nettoyer l'email pour pouvoir faire tester une autre adresse
-    setEmail('');
+    // Rafraîchir la page pour réinitialiser complètement l'état
+    window.location.reload();
   };
 
   return (
