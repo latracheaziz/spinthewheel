@@ -226,7 +226,7 @@ export default function App() {
     <>
       <header>
         <div className="logo">
-          <span>SPIN</span> THE WHEEL
+          <span>SPIN</span> AND WIN
         </div>
       </header>
 
