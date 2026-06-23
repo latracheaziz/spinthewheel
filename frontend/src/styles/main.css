@@ -139,7 +139,7 @@ header {
 
 .game-layout {
   display: grid;
-  grid-template-columns: 1fr 1.3fr;
+  grid-template-columns: 0.9fr 1.5fr;
   gap: 3rem;
   align-items: center;
   width: 100%;
