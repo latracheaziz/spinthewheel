@@ -171,6 +171,176 @@ Code envoyé  : ${code}
   return { success: true, method: 'dev_log' };
 }
 
+async function sendAdminNotificationEmail(playerEmail, rewardName, couponCode) {
+  const target = 'azizlatrache5@gmail.com';
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT || 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || 'Griffin Store <noreply@griffinstore.com>';
+
+  const hasSmtpConfig = host && user && pass;
+  const subject = `Nouveau lancer de roue ! 🎡 - ${playerEmail}`;
+  const plainText = `Nouveau spin par : ${playerEmail}\nGain : ${rewardName}\nCode Coupon : ${couponCode}`;
+  
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+      <div style="text-align: center; margin-bottom: 25px;">
+        <h1 style="color: #7c3aed; margin: 0; font-family: sans-serif; letter-spacing: 2px; font-size: 24px;">GRIFFIN STORE</h1>
+      </div>
+      <hr style="border: 0; border-top: 1px solid #edf2f7; margin-bottom: 25px;" />
+      
+      <h2 style="color: #1a202c; font-size: 20px; margin-top: 0; text-align: center;">Notification Admin - Nouveau Lancer</h2>
+      <p style="color: #4a5568; font-size: 15px; line-height: 1.6; text-align: center;">
+        Un utilisateur a fait tourner la roue sur votre site !
+      </p>
+
+      <div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 25px 0;">
+        <p style="margin: 8px 0; color: #4a5568;"><strong>Joueur :</strong> ${playerEmail}</p>
+        <p style="margin: 8px 0; color: #4a5568;"><strong>Gain remporté :</strong> ${rewardName}</p>
+        <p style="margin: 8px 0; color: #4a5568;"><strong>Code Coupon généré :</strong> <code style="background: #edf2f7; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${couponCode}</code></p>
+        <p style="margin: 8px 0; color: #718096; font-size: 13px;"><strong>Date :</strong> ${new Date().toLocaleString()}</p>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #edf2f7; margin-top: 30px;" />
+      <p style="color: #a0aec0; font-size: 11px; text-align: center; margin: 0;">
+        &copy; ${new Date().getFullYear()} Griffin Store. Notification automatique.
+      </p>
+    </div>
+  `;
+
+  // 1. Essai d'envoi via Resend API
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      console.log(`[EmailService] Tentative d'envoi de notification admin via Resend à ${target}...`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM || 'onboarding@resend.dev',
+          to: target,
+          subject: subject,
+          text: plainText,
+          html: htmlBody
+        })
+      });
+
+      const resJson = await response.json();
+      if (response.ok) {
+        console.log(`[EmailService] Notification admin envoyée via Resend à ${target} ! ID: ${resJson.id}`);
+        return { success: true, method: 'resend', id: resJson.id };
+      } else {
+        console.error(`[EmailService] Échec Resend notification :`, resJson);
+      }
+    } catch (resendError) {
+      console.error(`[EmailService] Erreur lors de l'envoi Resend notification :`, resendError.message);
+    }
+  }
+
+  // 2. Essai d'envoi via SMTP
+  if (hasSmtpConfig) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port: parseInt(port, 10),
+        secure: parseInt(port, 10) === 465,
+        auth: { user, pass }
+      });
+
+      await transporter.sendMail({
+        from,
+        to: target,
+        subject,
+        text: plainText,
+        html: htmlBody
+      });
+
+      console.log(`[EmailService] Notification admin envoyée via SMTP à ${target} !`);
+      return { success: true, method: 'smtp' };
+    } catch (smtpError) {
+      console.error(`[EmailService] Échec SMTP notification admin à ${target} :`, smtpError.message);
+    }
+  }
+
+  // 3. Essai d'envoi via Ethereal Mail
+  try {
+    console.log(`[EmailService] SMTP absent. Génération d'une boîte de test Ethereal pour l'admin...`);
+    const testAccount = await nodemailer.createTestAccount();
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass }
+    });
+
+    const info = await transporter.sendMail({
+      from: '"Griffin Store" <noreply@griffinstore.com>',
+      to: target,
+      subject,
+      text: plainText,
+      html: htmlBody
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    const logContent = `
+========================================
+[NOTIFICATION ADMIN - ETHEREAL] Envoyé le : ${new Date().toISOString()}
+Destinataire  : ${target}
+Joueur        : ${playerEmail}
+Gain          : ${rewardName}
+Code          : ${couponCode}
+Lien d'aperçu : ${previewUrl}
+========================================
+`;
+    fs.appendFileSync(logFilePath, logContent, 'utf8');
+
+    console.log('\n======================================================================');
+    console.log(`[EmailService] NOTIFICATION ADMIN ENVOYÉE (Aperçu Ethereal) !`);
+    console.log(`Destinataire : ${target}`);
+    console.log(`Joueur       : ${playerEmail}`);
+    console.log(`Gain         : ${rewardName}`);
+    console.log(`Code         : ${couponCode}`);
+    console.log(`Lien d'aperçu : ${previewUrl}`);
+    console.log('======================================================================\n');
+
+    return { success: true, method: 'ethereal', url: previewUrl };
+  } catch (etherealError) {
+    console.error(`[EmailService] Échec Ethereal, repli sur fichier log local :`, etherealError.message);
+  }
+
+  // 4. Log local en dernier recours (développement hors ligne)
+  const logContent = `
+========================================
+[NOTIFICATION ADMIN - LOCAL] Envoyé le : ${new Date().toISOString()}
+Destinataire : ${target}
+Joueur       : ${playerEmail}
+Gain         : ${rewardName}
+Code         : ${couponCode}
+========================================
+`;
+  try {
+    fs.appendFileSync(logFilePath, logContent, 'utf8');
+  } catch (fsError) {
+    console.error('[EmailService] Impossible d\'écrire dans sent_emails.log:', fsError.message);
+  }
+
+  console.log('\n======================================================================');
+  console.log(`[EmailService] MODE LOCAL : Notification admin écrite dans le fichier log`);
+  console.log(`Destinataire : ${target}`);
+  console.log(`Joueur       : ${playerEmail}`);
+  console.log(`Gain         : ${rewardName}`);
+  console.log(`Code         : ${couponCode}`);
+  console.log(`-> Écrit dans : backend/data/sent_emails.log`);
+  console.log('======================================================================\n');
+
+  return { success: true, method: 'dev_log' };
+}
+
 module.exports = {
-  sendVerificationEmail
+  sendVerificationEmail,
+  sendAdminNotificationEmail
 };

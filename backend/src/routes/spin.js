@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { dbQuery } = require('../config/db');
+const { sendAdminNotificationEmail } = require('../services/emailService');
 
 // Validation simple d'email
 function validateEmail(email) {
@@ -197,6 +198,11 @@ router.post('/', async (req, res) => {
         name: chosenReward.name
       },
       couponCode
+    });
+
+    // 7. Envoyer la notification admin par e-mail de façon asynchrone (sans bloquer la roue)
+    sendAdminNotificationEmail(standardizedIdentifier, chosenReward.name, couponCode).catch(err => {
+      console.error('[Admin Notification] Impossible d\'envoyer le mail de notification :', err.message);
     });
 
   } catch (error) {
