@@ -87,17 +87,17 @@ if (useSQLite) {
       // Seed rewards synchronously if they are empty
       if (!this.data.rewards || this.data.rewards.length === 0) {
         this.data.rewards = [
-          { id: 1, name: 'Essaie à la prochaine', probability: 0.21, active: 1, stock: -1 },
-          { id: 2, name: 'Livraison gratuite', probability: 0.08, active: 1, stock: -1 },
-          { id: 3, name: '5% de réduction', probability: 0.20, active: 1, stock: -1 },
-          { id: 4, name: '10% de réduction', probability: 0.10, active: 1, stock: -1 },
-          { id: 5, name: '15% de réduction', probability: 0.10, active: 1, stock: -1 },
-          { id: 6, name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
-          { id: 7, name: '50% de réduction sur 3ème achat', probability: 0.05, active: 1, stock: -1 },
-          { id: 8, name: 'Porte-clés gratuit', probability: 0.03, active: 1, stock: 10 },
-          { id: 9, name: 'T-shirt gratuit', probability: 0.01, active: 1, stock: 5 },
-          { id: 10, name: 'Bon d’achat 5 DT', probability: 0.01, active: 1, stock: -1 },
-          { id: 11, name: 'Bon d’achat 10 DT', probability: 0.01, active: 1, stock: -1 }
+          { id: 1, name: '50% de réduction', probability: 0.30, active: 1, stock: -1 },
+          { id: 2, name: 'Livraison gratuite', probability: 0.05, active: 1, stock: -1 },
+          { id: 3, name: '5% de réduction', probability: 0.00, active: 1, stock: -1 },
+          { id: 4, name: '10% de réduction', probability: 0.00, active: 1, stock: -1 },
+          { id: 5, name: '15% de réduction', probability: 0.00, active: 1, stock: -1 },
+          { id: 6, name: 'Essaie à la prochaine', probability: 0.30, active: 1, stock: -1 },
+          { id: 7, name: '50% de réduction sur 3ème achat', probability: 0.00, active: 1, stock: -1 },
+          { id: 8, name: 'Porte-clés gratuit', probability: 0.05, active: 1, stock: 10 },
+          { id: 9, name: 'T-shirt gratuit', probability: 0.30, active: 1, stock: 5 },
+          { id: 10, name: 'Bon d’achat 5 DT', probability: 0.00, active: 1, stock: -1 },
+          { id: 11, name: 'Bon d’achat 10 DT', probability: 0.00, active: 1, stock: -1 }
         ];
         this.save();
       }
@@ -352,17 +352,17 @@ async function initDatabase() {
   const count = await dbQuery.get('SELECT COUNT(*) as count FROM rewards');
   if (count.count === 0) {
     const initialRewards = [
-      { name: 'Essaie à la prochaine', probability: 0.21, active: 1, stock: -1 },
-      { name: 'Livraison gratuite', probability: 0.08, active: 1, stock: -1 },
-      { name: '5% de réduction', probability: 0.20, active: 1, stock: -1 },
-      { name: '10% de réduction', probability: 0.10, active: 1, stock: -1 },
-      { name: '15% de réduction', probability: 0.10, active: 1, stock: -1 },
-      { name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
-      { name: '50% de réduction sur 3ème achat', probability: 0.05, active: 1, stock: -1 },
-      { name: 'Porte-clés gratuit', probability: 0.03, active: 1, stock: 10 },
-      { name: 'T-shirt gratuit', probability: 0.01, active: 1, stock: 5 },
-      { name: 'Bon d’achat 5 DT', probability: 0.01, active: 1, stock: -1 },
-      { name: 'Bon d’achat 10 DT', probability: 0.01, active: 1, stock: -1 }
+      { name: '50% de réduction', probability: 0.30, active: 1, stock: -1 },
+      { name: 'Livraison gratuite', probability: 0.05, active: 1, stock: -1 },
+      { name: '5% de réduction', probability: 0.00, active: 1, stock: -1 },
+      { name: '10% de réduction', probability: 0.00, active: 1, stock: -1 },
+      { name: '15% de réduction', probability: 0.00, active: 1, stock: -1 },
+      { name: 'Essaie à la prochaine', probability: 0.30, active: 1, stock: -1 },
+      { name: '50% de réduction sur 3ème achat', probability: 0.00, active: 1, stock: -1 },
+      { name: 'Porte-clés gratuit', probability: 0.05, active: 1, stock: 10 },
+      { name: 'T-shirt gratuit', probability: 0.30, active: 1, stock: 5 },
+      { name: 'Bon d’achat 5 DT', probability: 0.00, active: 1, stock: -1 },
+      { name: 'Bon d’achat 10 DT', probability: 0.00, active: 1, stock: -1 }
     ];
 
     for (const reward of initialRewards) {
