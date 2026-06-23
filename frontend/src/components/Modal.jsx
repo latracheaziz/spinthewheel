@@ -7,7 +7,10 @@ export default function Modal({ isOpen, onClose, reward, couponCode }) {
 
   if (!isOpen) return null;
 
-  const isLosing = reward.name.toLowerCase().includes('pas de chance') || reward.name.toLowerCase().includes('perdu');
+  const isLosing = reward.name.toLowerCase().includes('pas de chance') || 
+                   reward.name.toLowerCase().includes('perdu') ||
+                   reward.name.toLowerCase().includes('prochaine') ||
+                   reward.name.toLowerCase().includes('essaie');
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(couponCode);
@@ -29,9 +32,9 @@ export default function Modal({ isOpen, onClose, reward, couponCode }) {
             <div style={{ ...styles.iconContainer, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
               <Info size={40} />
             </div>
-            <h2 style={styles.title}>Mince ! Pas de chance...</h2>
+            <h2 style={styles.title}>Essaie à la prochaine ! 😊</h2>
             <p style={styles.desc}>
-              Ne vous découragez pas, vous aurez d'autres occasions d'obtenir des cadeaux lors de votre prochaine visite !
+              Pas de chance cette fois-ci ! Garde le sourire, d'autres surprises t'attendent très bientôt.
             </p>
             <button onClick={onClose} className="btn-primary" style={styles.actionBtn}>
               Fermer

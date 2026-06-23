@@ -89,8 +89,8 @@ async function initDatabase() {
   const count = await dbQuery.get('SELECT COUNT(*) as count FROM rewards');
   if (count.count === 0) {
     const initialRewards = [
-      { name: 'Pas de chance, réessayez', probability: 0.20, active: 1, stock: -1 },
-      { name: 'Pas de chance, réessayez', probability: 0.20, active: 1, stock: -1 },
+      { name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
+      { name: 'Essaie à la prochaine', probability: 0.20, active: 1, stock: -1 },
       { name: '5% de réduction', probability: 0.20, active: 1, stock: -1 },
       { name: '10% de réduction', probability: 0.10, active: 1, stock: -1 },
       { name: '15% de réduction', probability: 0.10, active: 1, stock: -1 },

@@ -188,7 +188,10 @@ export default function App() {
     setIsSpinning(false);
     
     // Déclencher les confettis s'il y a eu gain (pas un "pas de chance")
-    const isLosing = rewardWon.name.toLowerCase().includes('pas de chance') || rewardWon.name.toLowerCase().includes('perdu');
+    const isLosing = rewardWon.name.toLowerCase().includes('pas de chance') || 
+                     rewardWon.name.toLowerCase().includes('perdu') ||
+                     rewardWon.name.toLowerCase().includes('prochaine') ||
+                     rewardWon.name.toLowerCase().includes('essaie');
     if (!isLosing) {
       // Effet confetti premium
       confetti({
